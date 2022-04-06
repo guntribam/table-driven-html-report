@@ -1,0 +1,25 @@
+{
+  "name": "table-driven-html-report",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/guntribam/table-driven-html-report.git"
+  },
+  "keywords": [
+    "adonis",
+    "japa",
+    "plugin",
+    "reporter"
+  ],
+  "author": "guntribam",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/guntribam/table-driven-html-report/issues"
+  },
+  "homepage": "https://github.com/guntribam/table-driven-html-report#readme"
+}
