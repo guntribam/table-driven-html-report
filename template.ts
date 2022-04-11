@@ -1,15 +1,17 @@
 export interface TestTemplateProps {
-    totalGroups: number
-    totalGroupsFailed: number
-    totalGroupsPassed: number
-    totalGroupsSkipped: number
-    totalTests: Number
-    totalTestsFailed: Number
-    totalTestsPassed: Number
-    totalTestsSkipped: Number
-    totalTime: string
-    timestamp: string
-    state: any
+  totalGroups: number
+  totalGroupsFailed: number
+  totalGroupsPassed: number
+  totalGroupsSkipped: number
+  totalTests: Number
+  totalTestsFailed: Number
+  totalTestsPassed: Number
+  totalTestsSkipped: Number
+  totalTime: string
+  timestamp: string
+  projectName: string
+  successRate: number
+  state: any
 }
 export const htmlTemplate = (_: TestTemplateProps) => `
 <!DOCTYPE html>
@@ -21,465 +23,581 @@ export const htmlTemplate = (_: TestTemplateProps) => `
   <title>Test Report</title>
   <style>
   html,
-  body {
-    margin: 0px;
-    font-family: monospace;
-    height: 100%
-  }
+    body {
+      margin: 0px;
+      font-family: monospace;
+      height: 100%;
+      overflow: hidden;
+    }
 
-  .row {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    width: 100%;
-  }
+    .row {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+      width: 100%;
+    }
 
-  .column {
-    display: flex;
-    flex-direction: column;
-    flex-basis: 100%;
-    flex: 1;
-  }
+    .column {
+      display: flex;
+      flex-direction: column;
+      flex-basis: 100%;
+      flex: 1;
+    }
 
-  header {
-    background-color: #f5c10e;
-    font-size: larger;
-    padding: 10px 0px;
-    justify-content: space-between;
-    width: 100%;
-  }
+    header {
+      background-color: #f5c10e;
+      font-size: larger;
+      padding: 10px 0px;
+      justify-content: space-between;
+      width: 100%;
+    }
 
-  .container {
-    margin: 0 auto;
-    background: #fff;
-    display: flex;
-  }
+    .search-box {
+      position: relative;
+      background-color: #333333;
+      width: 75%;
+      margin: 0 auto;
+      color: white;
+      font-size: large;
+      font-weight: bold;
+      border-radius: 5px;
+      height: 25px;
+      margin-top: 10px;
+      padding: 5px;
+      padding-top: 10px;
+      padding-left: 35px;
+      outline-width: 0px;
+      outline-color: black;
+    }
 
-  .sidebar {
-    background-color: #333333;
-    color: lightgray;
-    min-width: 20%;
-    width: 25%;
-    overflow-y: auto;
-    overflow-x: auto;
-    height: 95.7vh;
-  }
+    [contenteditable=true]:empty:before {
+      content: attr(placeholder);
+      color: white;
+      outline-width: 0px;
+      outline-color: black;
+      /* For Firefox */
+    }
 
-  .search {
-    display: flex;
-    flex-direction: column;
-  }
+    .search-box:hover {
+      background-color: black;
+      cursor: pointer;
+    }
 
-  .search-title {
-    text-align: left;
-    font-size: large;
-    padding: 10px;
-    margin-left: 20px;
-  }
+    [contenteditable=true]:focus {
+      outline: none;
+    }
 
-  .search-input {
-    width: 90%;
-    height: 30px;
-    border-radius: 5px;
-    margin: 0 auto;
-  }
+    .search-box::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 5px;
+      bottom: 3px;
+      width: 20px;
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20' fill-rule='evenodd' stroke='white' stroke-linecap='round' stroke-linejoin='round' fill='none' %3E%3Cpath d='M14.386 14.386l4.0877 4.0877-4.0877-4.0877c-2.9418 2.9419-7.7115 2.9419-10.6533 0-2.9419-2.9418-2.9419-7.7115 0-10.6533 2.9418-2.9419 7.7115-2.9419 10.6533 0 2.9419 2.9418 2.9419 7.7115 0 10.6533z'%3E%3C/path%3E%3C/svg%3E") center / contain no-repeat;
+    }
 
-  .search-results ul {
-    list-style-type: none;
-  }
+    .container {
+      margin: 0 auto;
+      background: #fff;
+      display: flex;
+      height: 100%;
+    }
 
-  .search-list {
-    font-size: large;
-    padding-left: 0px;
-  }
+    .sidebar {
+      background-color: #333333;
+      color: lightgray;
+      min-width: 20%;
+      max-width: 25%;
+      width: 20%;
+      overflow-y: auto;
+      overflow-x: auto;
+    }
 
-  .search-list li {
-    padding: 10px 20px 10px 13px;
-  }
+    .search {
+      display: flex;
+      flex-direction: column;
+    }
 
-  .test-selected {
-    background-color: rgb(37, 37, 37);
-    border-left: 2px solid red;
-  }
+    .search-title {
+      text-align: left;
+      font-size: large;
+      padding: 10px;
+      margin-left: 20px;
+    }
 
-  .search-list li:hover {
-    background-color: black;
-    cursor: pointer;
-  }
+    .search-input {
+      width: 90%;
+      height: 30px;
+      border-radius: 5px;
+      margin: 0 auto;
+    }
 
-  .suite {
-    font-size: small;
-  }
+    .search-results ul {
+      list-style-type: none;
+    }
 
-  .test-report {
-    display: flex;
-    align-items: center;
-    flex-direction: column;
-    text-align: center;
-    width: 75%;
-    height: 95.7vh;
-  }
+    .search-list {
+      font-size: large;
+      padding-left: 0px;
+    }
 
-  .title {
-    font-size: 1.25rem;
-    text-align: left;
-    text-transform: uppercase;
-    width: 12.5rem;
-    height: 4rem;
-  }
+    .search-list li {
+      padding: 10px 20px 10px 13px;
+    }
 
-  .result,
-  .total {
-    font-size: 1.5rem;
-    text-align: center;
-    text-transform: uppercase;
-    width: 5rem;
-  }
+    .test-selected {
+      background-color: rgb(37, 37, 37);
+      border-left: 4px solid #0085C9;
+    }
 
-  .test-status {
-    width: 5rem;
-    text-align: center;
-    height: 2rem;
-  }
+    .search-list li:hover {
+      background-color: black;
+      cursor: pointer;
+    }
 
-  .test-status .failed {
-    border-bottom: 2px solid red;
-  }
+    .suite {
+      font-size: small;
+    }
 
-  .test-status .passed {
-    border-bottom: 2px solid green;
-  }
+    .test-chart {
+      display: flex;
+      flex-direction: row;
+      width: 100%;
+      align-items: center;
+    }
 
-  .test-status .skipped {
-    border-bottom: 2px solid gray;
-  }
+    .test-chart-pie {
+      width: 30%;
+    }
 
-  .result.failed {
-    color: red;
-  }
+    .test-chart-table {
+      width: 30%;
+    }
 
-  .result.passed {
-    color: green;
-  }
+    .test-chart-metadata {
+      width: 30%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
 
-  .result.skipped {
-    color: gray;
-  }
+    .test-chart-metadata ul {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
 
-  .total-groups {
-    background-color: lightgray;
-  }
+    .test-chart-metadata li {
+      display: flex;
+      border-bottom: lightgray solid 1px;
+    }
 
-  tbody {
-    border: 1px solid lightgray;
-  }
+    .test-chart-metadata label {
+      text-align: left;
+      width: 50%;
+      font-weight: bold;
+    }
 
-  .total-time {
-    text-transform: uppercase;
-    font-weight: bold;
-    font-size: 1.25rem;
-    margin-top: 10px;
-    display: flex;
-    justify-content: space-between;
-    border-bottom: 1px solid lightgrey;
-    width: 33.5rem;
-  }
+    .test-report {
+      display: flex;
+      align-items: center;
+      flex-direction: column;
+      text-align: center;
+      width: 75%;
+    }
 
-  .report {
-    margin-top: 10px;
-    background-color: white;
-    width: 100%;
-    max-height: 78.75%;
-  }
+    .title {
+      font-size: 1.25rem;
+      text-align: left;
+      text-transform: uppercase;
+      width: 12.5rem;
+      height: 4rem;
+    }
 
-  .test-title {
-    background-color: black;
-    padding: 10px
-  }
+    .result,
+    .total {
+      font-size: 1.5rem;
+      text-align: center;
+      text-transform: uppercase;
+      width: 5rem;
+    }
 
-  .test-data,
-  .tags {
-    font-size: larger;
-    color: lightgray;
-    display: flex;
-  }
+    .test-status {
+      width: 5rem;
+      text-align: center;
+      height: 2rem;
+    }
 
-  .test-data {
-    gap: 10px;
-  }
+    .test-status .failed {
+      border-bottom: 2px solid #E73E48;
+    }
 
-  .tags {
-    font-weight: bolder;
-    gap: 10px;
-  }
+    .test-status .passed {
+      border-bottom: 2px solid #27CAA9;
+    }
 
-  .test-id-hour {
-    display: flex;
-    align-items: center;
-    font-size: medium;
-    font-weight: bolder;
-    gap: 10px;
-  }
+    .test-status .skipped {
+      border-bottom: 2px solid gray;
+    }
 
-  .test-id {
-    text-align: left;
-    display: flex;
-    align-items: center;
-  }
+    .result.failed {
+      color: #E73E48;
+    }
 
-  .circle {
-    width: 45px;
-    height: 40px;
-    border-radius: 50%;
-    display: block;
-    margin-right: 10px;
-  }
+    .result.passed {
+      color: #27CAA9;
+    }
 
-  .green {
-    background: #27caa9;
-  }
+    .result.skipped {
+      color: gray;
+    }
 
-  .red {
-    background: red;
-  }
+    .total-groups {
+      background-color: lightgray;
+    }
 
-  .details {
-    margin: 5px 10px;
-    -webkit-flex-grow: 1;
-    -moz-flex-grow: 1;
-    flex-grow: 1;
-    background-color: #ffffff;
-    overflow-y: scroll;
-    max-height: 93.275%;
-  }
+    tbody {
+      border: 1px solid lightgray;
+    }
 
-  .details .content {
-    padding: 0.5rem;
-    background: #fff;
-    font-size: 0.9rem;
-  }
+    .total-time {
+      text-transform: uppercase;
+      font-weight: bold;
+      font-size: 1.25rem;
+      margin-top: 10px;
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px solid lightgrey;
+      width: 33.5rem;
+    }
 
-  .details .content:after {
-    content: "";
-    display: table;
-    clear: both;
-  }
+    .report {
+      margin-top: 10px;
+      background-color: white;
+      width: 100%;
+      max-height: 78.75%;
+    }
 
-  .details table {
-    border-collapse: collapse;
-    border: 1px solid #cccccc;
-    border-bottom: 0;
-    border-right: 0;
-    width: 80%
-  }
+    .test-title {
+      padding: 10px
+    }
 
-  .details table td,
-  .details table th {
-    border-bottom: 1px solid #cccccc;
-    border-right: 1px solid #cccccc;
-    padding: 10px;
-  }
+    .test-data,
+    .tags {
+      font-size: larger;
+      color: lightgray;
+      display: flex;
+      align-items: center;
+    }
 
-  .details table th {
-    background: #cccccc;
-  }
+    .test-data {
+      color: black;
+      gap: 10px;
+    }
 
-  .details .data-table {
-    border-collapse: collapse;
-    border: 1px solid #cccccc;
-    border-bottom: 0;
-    border-right: 0;
-    margin-bottom: 10px;
-  }
+    .test-data> :nth-child(1) {
+      color: black;
+      font-weight: bolder;
+    }
 
-  .details .data-table td {
-    color: #000000;
-    border-bottom: none;
-    border-right: none;
-    padding: 0.5rem 1rem;
-    cursor: pointer;
-    opacity: 0.75;
-  }
+    .tags {
+      font-weight: bolder;
+      gap: 10px;
+    }
 
-  .data-table tr.passed td {
-    background-color: #27CAA9;
-  }
+    .test-id-hour {
+      display: flex;
+      align-items: center;
+      font-size: medium;
+      font-weight: bolder;
+      gap: 10px;
+    }
 
-  .data-table tr.failed td {
-    background-color: #E73E48;
-    color: #ffffff;
-  }
+    .test-id {
+      text-align: left;
+      display: flex;
+      align-items: center;
+    }
 
-  .data-table tr.skipped td {
-    background-color: #999999;
-    color: #000000;
-  }
+    .circle {
+      width: 45px;
+      height: 40px;
+      border-radius: 50%;
+      display: block;
+      margin-right: 10px;
+    }
 
-  .data-table tr.selected td {
-    opacity: 1;
-  }
+    .green {
+      background: #27CAA9;
+    }
 
-  .data-table tr.selected td:first-child {
-    border-left: 4px solid #0085C9;
-  }
+    .red {
+      background: red;
+    }
 
-  .data-table tr:hover td {
-    opacity: 0.9;
-  }
+    .details {
+      margin: 5px 10px;
+      -webkit-flex-grow: 1;
+      -moz-flex-grow: 1;
+      flex-grow: 1;
+      background-color: #ffffff;
+      overflow-y: auto;
+    }
 
-  .table-real-results {
-    margin-top: 10px;
-  }
+    .details .content {
+      padding: 0.5rem;
+      background: #fff;
+      font-size: 0.9rem;
+    }
 
-  .error-message {
-    background-color: black;
-    max-width: 50%;
-    display: block;
-    overflow: auto;
-    overflow-wrap: break-word;
-    text-align: left;
-  }
+    .details .content:after {
+      content: "";
+      display: table;
+      clear: both;
+    }
 
-  pre.bash {
-    background-color: black;
-    color: white;
-    font-size: medium;
-    font-family: monospace;
-    display: inline;
-  }
+    .details table {
+      border-collapse: collapse;
+      border: 1px solid #cccccc;
+      border-bottom: 0;
+      border-right: 0;
+      width: 80%
+    }
+
+    .details table td,
+    .details table th {
+      border-bottom: 1px solid #cccccc;
+      border-right: 1px solid #cccccc;
+      padding: 10px;
+    }
+
+    .details table th {
+      background: #cccccc;
+    }
+
+    .details .data-table {
+      border-collapse: collapse;
+      border: 1px solid #cccccc;
+      border-bottom: 0;
+      border-right: 0;
+      margin-bottom: 10px;
+      width: 100%;
+    }
+
+    .details .data-table td {
+      color: #000000;
+      border-bottom: none;
+      border-right: none;
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      opacity: 0.75;
+    }
+
+    .data-table tr.passed td {
+      background-color: #27CAA9;
+    }
+
+    .data-table tr.failed td {
+      background-color: #E73E48;
+      color: #ffffff;
+    }
+
+    .data-table tr.skipped td {
+      background-color: #999999;
+      color: #000000;
+    }
+
+    .data-table tr.selected td {
+      opacity: 1;
+    }
+
+    .data-table tr.selected td:first-child {
+      border-left: 4px solid #0085C9;
+    }
+
+    .data-table tr:hover td {
+      opacity: 0.9;
+    }
+
+    .table-real-results {
+      margin-top: 10px;
+    }
+
+    .error-message {
+      background-color: black;
+      max-width: 50%;
+      display: block;
+      overflow: auto;
+      overflow-wrap: break-word;
+      text-align: left;
+    }
+
+    pre.bash {
+      background-color: black;
+      color: white;
+      font-size: medium;
+      font-family: monospace;
+      display: inline;
+    }
 
 
-  .hidden {
-    transform : scale(0,0);
-  }
+    .hidden {
+      display: none !important;
+    }
 
-  .search-list .item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
+    .search-list .item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
 
-  .check {
-    display: inline-block;
-    transform: rotate(45deg);
-    height: 11px;
-    width: 5px;
-    border-bottom: 2.5px solid lightgreen;
-    border-right: 2.5px solid lightgreen;
-  }
+    .check {
+      display: inline-block;
+      transform: rotate(45deg);
+      height: 11px;
+      width: 5px;
+      border-bottom: 2.5px solid #27CAA9;
+      border-right: 2.5px solid #27CAA9;
+    }
 
-  .failing::after {
-    font-size: large;
-    font-weight: bolder;
-    content: 'X';
-    color: rgb(252, 92, 92)
-  }
+    .failing::after {
+      font-size: large;
+      font-weight: bolder;
+      content: 'X';
+      color: #E73E48;
+    }
 
   </style>
 </head>
 
 <body>
-  <header class="row header">
-    <span>Project: Contas</span>
-    <span>Generated on: ${_.timestamp}</span>
-  </header>
   <main class="container">
-    <sidebar class="sidebar">
-      <div class="search">
-        <label class="search-title" id="search-title">Test Search:</label>
-        <input for="search-title" type="search" id="search" autocomplete="off" class="search-input" />
+  <sidebar class="sidebar">
+    <div class="search">
+      <div class="search-box">
+        <div contenteditable="true" id="search" placeholder="Search Tests"></div>
       </div>
-      <div class="search-results">
-        <ul class="search-list">
-        </ul>
-      </div>
+    </div>
+    <div class="search-results">
+      <ul class="search-list">
+      </ul>
+    </div>
 
-    </sidebar>
+  </sidebar>
 
-    <div class="test-report">
-      <table>
-        <thead>
-          <tr class="test-status">
-            <th />
-            <th />
-            <th class="failed">Failed</th>
-            <th class="passed">Passed</th>
-            <th class="skipped">Skipped</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr class="total-groups">
-            <th class="title">Total Groups</th>
-            <td class="total">${_.totalGroups}</td>
-            <td class="result failed">${_.totalGroupsFailed}</td>
-            <td class="result passed">${_.totalGroupsPassed}</td>
-            <td class="result skipped">${_.totalGroupsSkipped}</td>
-          </tr>
-          <tr class="total-tests">
-            <th class="title">Total Tests</th>
-            <td class="total">${_.totalTests}</td>
-            <td class="result failed">${_.totalTestsFailed}</td>
-            <td class="result passed">${_.totalTestsPassed}</td>
-            <td class="result skipped">${_.totalTestsSkipped}</td>
-          </tr>
-        </tbody>
-      </table>
-      <div class="total-time">
-        <span>Total time</span>
-        <span>${_.totalTime}</span>
+  <div class="test-report">
+    <div class="test-chart">
+      <div class="test-chart-pie">
+        <canvas width="150" height="120"></canvas>
       </div>
-      <div class="report">
-      <div class="test-title">
-        <div class="test-data">
-          <span></span>
-          <span>-</span>
-          <span></span>
-        </div>
-      </div>
-      <div class="details">
-        <div class="test-table">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th></th>
+      <div class="test-chart-table">
+        <table>
+          <thead>
+            <tr class="test-status">
+              <th />
+              <th />
+              <th class="failed">Failed</th>
+              <th class="passed">Passed</th>
+              <th class="skipped">Skipped</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="total-groups">
+              <th class="title">Total Groups</th>
+              <td class="total">${_.totalGroups}</td>
+              <td class="result failed">${_.totalGroupsFailed}</td>
+              <td class="result passed">${_.totalGroupsPassed}</td>
+              <td class="result skipped">-/-</td>
+            </tr>
+            <tr class="total-tests">
+              <th class="title">Total Tests</th>
+              <td class="total">${_.totalTests}</td>
+              <td class="result failed">${_.totalTestsFailed}</td>
+              <td class="result passed">${_.totalTestsPassed}</td>
+              <td class="result skipped">${_.totalTestsSkipped}</td>
               </tr>
-            </thead>
-            <tbody>
-              <tr><td></td></tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="test-id-hour">
-          <div class="test-id">
-            <span class="circle green"></span>
-            <span class="test-selected-title"></span>
+              </tbody>
+            </table>
           </div>
-          <span>-</span>
-          <span class="test-selected-time"></span>
+          <div class="test-chart-metadata">
+            <ul>
+              <li>
+                <label>Project:</label>
+                <span>${_.projectName || '-/-'}</span>
+              </li>
+              <li>
+                <label>Success Rate:</label>
+                <span>${(_.successRate * 100).toFixed(2)}%</span>
+              </li>
+              <li>
+                <label>Total Time:</label>
+                <span>${_.totalTime}</span>
+              </li>
+              <li>
+                <label>Timestamp:</label>
+                <span>${_.timestamp}</span>
+              </li>
+            </ul>
+
+          </div>
         </div>
-        <div class="table-real-results">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr><td></td></tr>
-            </tbody>
-          </table>
-        </div>
-        <div class="exception">
-          <span class="error-message">
-            <pre class="bash">
-            </pre>
-          </span>
+        <div class="report">
+          <div class="test-title">
+            <div class="test-data">
+              <span></span>
+              <span></span>
+            </div>
+          </div>
+          <div class="details">
+            <div class="test-table">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="test-id-hour">
+              <div class="test-id">
+                <span class="circle green"></span>
+                <span class="test-selected-title"></span>
+              </div>
+              <span>-</span>
+              <span class="test-selected-time"></span>
+            </div>
+            <div class="table-real-results">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="exception">
+              <span class="error-message">
+                <pre class="bash">
+                </pre>
+              </span>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-    </div>
-  </main>
+    </main>
   <script>
     const state = ${JSON.stringify(_.state)}
 
@@ -488,15 +606,15 @@ export const htmlTemplate = (_: TestTemplateProps) => `
       const title = document.querySelector('.test-selected-title')
       const time = document.querySelector('.test-selected-time')
       title.innerHTML = testData.title;
-      title.innerHTML +=  testData.tags.length ? ('<br/>Tags: ' + testData.tags) : ''
+      title.innerHTML += testData.tags.length ? ('<br/>Tags: ' + testData.tags) : ''
       time.innerHTML = testData.time
-      if(testData?.realValues?.length){
+      if (testData?.realValues?.length) {
         const table = createTable(headers, { [testIndex]: testData }, 'realValues')
         const parent = document.querySelector('.table-real-results')
         const oldTable = parent.getElementsByTagName('table')[0]
         oldTable && parent.removeChild(oldTable)
         parent.appendChild(table)
-      }else{
+      } else {
         document.querySelector('.table-real-results').innerHTML = ''
       }
 
@@ -557,8 +675,8 @@ export const htmlTemplate = (_: TestTemplateProps) => `
       const { title, time, tags, suite } = state[Number(item.dataset.key)]
       Array.from(items).forEach(item => item.classList.remove('test-selected'))
       item.classList.add('test-selected');
-      document.querySelector('.test-data > :nth-child(1)').innerHTML = title + ' - ' + suite
-      document.querySelector('.test-data > :nth-child(3)').innerHTML = time
+      document.querySelector('.test-data > :nth-child(1)').innerHTML = title
+      document.querySelector('.test-data > :nth-child(2)').innerHTML = ' - ' + suite + ' - ' + time
     }
 
     const items = state.map((group, index) => {
@@ -568,9 +686,9 @@ export const htmlTemplate = (_: TestTemplateProps) => `
       li.classList.add('item')
       index === 0 && li.classList.add('test-selected')
       const title = document.createElement('span')
-      if([...new Set(state.map(g => g.suite))].length > 1){
-        title.innerHTML = group.title + '<span class="suite"> - '+group.suite+'</span>'
-      }else{
+      if ([...new Set(state.map(g => g.suite))].length > 1) {
+        title.innerHTML = group.title + '<span class="suite"> - ' + group.suite + '</span>'
+      } else {
         title.innerHTML = group.title
       }
       const icon = document.createElement('span')
@@ -588,13 +706,35 @@ export const htmlTemplate = (_: TestTemplateProps) => `
 
     const input = document.querySelector('#search');
     input.addEventListener('keyup', (ev) => {
-      const pattern = new RegExp(ev.target.value, 'i');
-      for (let i = 0; i < items.length; i++) {
-        pattern.test(items[i].innerText)
-          ? items[i].classList.remove("hidden")
-          : items[i].classList.add("hidden");
-      }
+      console.log("keyup", ev.target.innerText)
+      const pattern = new RegExp(ev.target.innerText, 'i');
+      Array.from(items).forEach((item) => {
+        pattern.test(item.innerText)
+          ? item.classList.remove("hidden")
+          : item.classList.add("hidden");
+      })
     });
+
+    const testChartData = [
+      { type: "passed", total: ${_.totalTestsPassed}, shade: "#E73E48" },
+      { type: "failed", total: ${_.totalTestsFailed}, shade: "#27CAA9" },
+      { type: "skipped", total: ${_.totalTestsSkipped}, shade: "lightgray" },
+    ]
+    let totalTests = testChartData.reduce((sum, { total }) => sum + total, 0);
+
+    const canvas = document.querySelector('canvas');
+    const ctx = canvas.getContext('2d');
+    let currentAngle = 0;
+
+    testChartData.forEach(testType => {
+      let portionAngle = 2 * Math.PI * (testType.total / totalTests);
+      ctx.beginPath();
+      ctx.arc(60, 60, 60, currentAngle, currentAngle + portionAngle);
+      currentAngle += portionAngle;
+      ctx.lineTo(60, 60);
+      ctx.fillStyle = testType.shade;
+      ctx.fill();
+    })
 
     document.querySelector('.error-message .bash').innerHTML = ''
   </script>
