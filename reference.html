@@ -473,7 +473,17 @@
     <div class="test-report">
       <div class="test-chart">
         <div class="test-chart-pie">
-          <canvas width="150" height="120"></canvas>
+          <svg height="150" width="150" viewBox="0 0 50 50">
+            <circle r="10.5" cx="25" cy="25" fill="transparent" stroke="lightgrey" stroke-width="21"
+              stroke-dasharray="calc(100 * (3.1416 * 21) / 100) calc(3.1416 * 21)"
+              transform="rotate(-90) translate(-50)" />
+            <circle r="10.5" cx="25" cy="25" fill="transparent" stroke="#E73E48" stroke-width="21"
+              stroke-dasharray="calc(85 * (3.1416 * 21) / 100) calc(3.1416 * 21)"
+              transform="rotate(-90) translate(-50)" />
+            <circle r="10.5" cx="25" cy="25" fill="transparent" stroke="#27CAA9" stroke-width="21"
+              stroke-dasharray="calc(75 * (3.1416 * 21) / 100) calc(3.1416 * 21)"
+              transform="rotate(-90) translate(-50)" />
+          </svg>
         </div>
         <div class="test-chart-table">
           <table>
@@ -796,26 +806,26 @@
       })
     });
 
-    const testChartData = [
-      { type: "passed", total: 30, shade: "#E73E48" },
-      { type: "failed", total: 30, shade: "#27CAA9" },
-      { type: "skipped", total: 30, shade: "lightgray" },
-    ]
-    let totalTests = testChartData.reduce((sum, { total }) => sum + total, 0);
+    // const testChartData = [
+    //   { type: "passed", total: 30, shade: "#E73E48" },
+    //   { type: "failed", total: 30, shade: "#27CAA9" },
+    //   { type: "skipped", total: 30, shade: "lightgray" },
+    // ]
+    // let totalTests = testChartData.reduce((sum, { total }) => sum + total, 0);
 
-    const canvas = document.querySelector('canvas');
-    const ctx = canvas.getContext('2d');
-    let currentAngle = 0;
+    // const canvas = document.querySelector('canvas');
+    // const ctx = canvas.getContext('2d');
+    // let currentAngle = 0;
 
-    testChartData.forEach(testType => {
-      let portionAngle = 2 * Math.PI * (testType.total / totalTests);
-      ctx.beginPath();
-      ctx.arc(60, 60, 60, currentAngle, currentAngle + portionAngle);
-      currentAngle += portionAngle;
-      ctx.lineTo(60, 60);
-      ctx.fillStyle = testType.shade;
-      ctx.fill();
-    })
+    // testChartData.forEach(testType => {
+    //   let portionAngle = 2 * Math.PI * (testType.total / totalTests);
+    //   ctx.beginPath();
+    //   ctx.arc(60, 60, 60, currentAngle, currentAngle + portionAngle);
+    //   currentAngle += portionAngle;
+    //   ctx.lineTo(60, 60);
+    //   ctx.fillStyle = testType.shade;
+    //   ctx.fill();
+    // })
 
     document.querySelector('.error-message .bash').innerHTML = ''
   </script>

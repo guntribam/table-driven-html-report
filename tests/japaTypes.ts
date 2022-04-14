@@ -1,4 +1,5 @@
 import '@japa/runner'
+import '@japa/core'
 
 declare module '@japa/runner' {
   interface TestContext {
@@ -7,6 +8,15 @@ declare module '@japa/runner' {
 
   interface Test<TestData> {
     // notify TypeScript about custom test properties
+  }
+
+
+
+}
+
+declare module '@japa/core' {
+  interface RunnerEvents {
+    'report:end': void;
   }
 
 }

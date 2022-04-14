@@ -1,8 +1,11 @@
 {
     "compilerOptions": {
-        "target": "ES2020",
+        "target": "ES2016",
         "module": "CommonJS",
-        "lib": ["ES2020", "DOM"],
+        "lib": [
+            "ES2020",
+            "DOM"
+        ],
         "esModuleInterop": true,
         "declaration": true,
         "outDir": "./build",
@@ -10,10 +13,6 @@
         "moduleResolution": "node",
     },
     "include": [
-        "index.ts",
-        "template.ts"
-    ],
-    "exclude": [
-        "node_modules"
+        "index.ts"
     ]
 }

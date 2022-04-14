@@ -1,11 +1,11 @@
 {
-  "name": "table-driven-html-report",
+  "name": "table-driven-html-reporter",
   "version": "0.0.1",
   "description": "",
   "main": "build/index.js",
   "types": "build/index.d.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node -r ts-node/register/transpile-only tests/test.ts",
     "build": "tsc",
     "prepare": "npm run build"
   },
@@ -41,5 +41,8 @@
     "postcss": "^8.4.12",
     "terser": "^5.12.1",
     "ts-node": "^10.7.0"
+  },
+  "dependencies": {
+    "get-caller-file": "^2.0.5"
   }
 }
