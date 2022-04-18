@@ -43,6 +43,7 @@
     "ts-node": "^10.7.0"
   },
   "dependencies": {
-    "get-caller-file": "^2.0.5"
+    "get-caller-file": "^2.0.5",
+    "mustache": "^4.2.0"
   }
 }

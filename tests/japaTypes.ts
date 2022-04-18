@@ -1,9 +1,9 @@
 import '@japa/runner'
-import '@japa/core'
+import { Assert } from '@japa/assert'
 
 declare module '@japa/runner' {
   interface TestContext {
-    // notify TypeScript about custom context properties
+    assert: Assert
   }
 
   interface Test<TestData> {
@@ -14,9 +14,3 @@ declare module '@japa/runner' {
 
 }
 
-declare module '@japa/core' {
-  interface RunnerEvents {
-    'report:end': void;
-  }
-
-}

@@ -1,3 +1,9 @@
+import '@japa/core';
+declare module '@japa/core' {
+    interface RunnerEvents {
+        'report:end': void;
+    }
+}
 export interface TestDrivenHtmlReporterConfig {
     projectName?: string;
     directory?: string;
@@ -16,8 +22,8 @@ export interface TemplateProps {
     totalTime: string;
     timestamp: string;
     projectName: string;
-    successRate: number;
-    failedRate: number;
+    successRate: string;
+    failedRate: string;
     successRadius: number;
     failedRadius: number;
     isSuccessPrimary: boolean;

@@ -6,6 +6,10 @@ import { fire } from '@japa/synthetic-events'
 import { htmlReporter } from '../index'
 import { JSDOM } from 'jsdom'
 
+const sleep = (time: number) => {
+  return new Promise((resolve) => setTimeout(resolve, time))
+}
+
 test.group('Report generation tests', group => {
   const defaultReportDir = 'report'
   const defaultReportFilename = 'testsReport.html'
@@ -21,7 +25,7 @@ test.group('Report generation tests', group => {
     runner = new Runner(emitter)
   })
 
-  group.teardown(() => {
+  group.each.teardown(() => {
     fs.rmSync(dirPath, { recursive: true, force: true });
   })
 
@@ -46,7 +50,7 @@ test.group('Report generation tests', group => {
     })
   }).waitForDone().teardown(() => {
     const directory = "customReportDir"
-    fs.rmSync(path.resolve(directory), { recursive: true, force: true });
+    fs.rmSync(path.join(rootPath, directory), { recursive: true, force: true });
   })
 
   test('Generate Report with another name', async ({ assert }, done: any) => {
@@ -77,22 +81,20 @@ test.group('Report generation tests', group => {
 
   test('Generate a minified report with at least 10% size reduction', async ({ assert }, done: any) => {
     assert.plan(1)
-    let normalSize: number;
-    let minifiedSize: number;
     htmlReporter()(runner, emitter)
+    emitter.on('report:end', async () => {
+      const normalSize = (await fs.promises.stat(filePath)).size
+      let newEmitter = new Emitter()
+      let newRunner = new Runner(newEmitter)
+      htmlReporter({ minify: true, reportName: "minified" })(newRunner, newEmitter)
+      newEmitter.on('report:end', async () => {
+        const { size: minifiedSize } = await fs.promises.stat(path.join(dirPath, 'minified.html'))
+        assert.isAbove(normalSize, minifiedSize * 1.1)
+        done()
+      })
+      await fire(newEmitter)
+    })
     await fire(emitter)
-    emitter.on('report:end', () => {
-      normalSize = fs.statSync(filePath).size
-    })
-    let newEmitter = new Emitter()
-    let newRunner = new Runner(newEmitter)
-    htmlReporter({ minify: true, reportName: "minified" })(newRunner, newEmitter)
-    await fire(newEmitter)
-    newEmitter.on('report:end', () => {
-      minifiedSize = fs.statSync(path.join(dirPath, 'minified.html')).size
-      assert.isAbove(normalSize, minifiedSize * 1.1)
-      done()
-    })
   }).waitForDone()
 
 })
@@ -112,7 +114,7 @@ test.group('Template generation tests', group => {
     runner = new Runner(emitter)
   })
 
-  group.teardown(() => {
+  group.each.teardown(() => {
     fs.rmSync(dirPath, { recursive: true, force: true });
   })
 
@@ -121,10 +123,40 @@ test.group('Template generation tests', group => {
     htmlReporter()(runner, emitter)
     await fire(emitter)
     emitter.on('report:end', () => {
-      assert.isTrue(fs.existsSync(path.join(dirPath, 'template.ts')))
+      assert.isTrue(fs.existsSync(path.join(dirPath, 'template.mustache')))
       done()
     })
   }).waitForDone()
+
+  test('Generate the template on a custom report folder', async ({ assert }, done: any) => {
+    assert.plan(1)
+    const directory = 'customReportDir'
+    htmlReporter({ directory })(runner, emitter)
+    await fire(emitter)
+    emitter.on('report:end', () => {
+      assert.isTrue(fs.existsSync(path.join(rootPath, directory, 'template.mustache')))
+      done()
+    })
+  }).waitForDone().teardown(() => {
+    const directory = "customReportDir"
+    fs.rmSync(path.join(rootPath, directory), { recursive: true, force: true });
+  })
+  test('Change the template and assert the custom text', async ({ assert }, done: any) => {
+    assert.plan(1)
+    await fs.promises.writeFile(path.join(dirPath, 'template.mustache'), `
+        <!DOCTYPE html><html lang="en"><body><h1>Custom Template</h1></body></html>
+    `)
+    htmlReporter()(runner, emitter)
+    await fire(emitter)
+    emitter.on('report:end', () => {
+      const report = fs.readFileSync(path.join(dirPath, defaultReportFilename), 'utf-8')
+      //console.log({report})
+      assert.include(report, 'Custom Template')
+      done()
+    })
+  }).waitForDone().setup(() => {
+    fs.mkdirSync(dirPath, { recursive: true })
+  })
 
 })
 
@@ -153,7 +185,7 @@ test.group('Report data tests', group => {
     await fire(emitter)
     emitter.on('report:end', () => {
       const html = fs.readFileSync(filePath, 'utf-8')
-      const {_document: document} = new JSDOM(html).window
+      const { _document: document } = new JSDOM(html).window
       const projectName = document.querySelector('.test-chart-metadata li:nth-child(1) span').innerHTML
       assert.equal(projectName, 'anotherReportName')
       done()
@@ -166,7 +198,7 @@ test.group('Report data tests', group => {
     await fire(emitter)
     emitter.on('report:end', () => {
       const html = fs.readFileSync(filePath, 'utf-8')
-      const {_document: document} = new JSDOM(html).window
+      const { _document: document } = new JSDOM(html).window
       const successRate = document.querySelector('.test-chart-metadata li:nth-child(2) span').innerHTML
       assert.equal(successRate, '69.23%')
       done()
@@ -179,7 +211,7 @@ test.group('Report data tests', group => {
     await fire(emitter)
     emitter.on('report:end', () => {
       const html = fs.readFileSync(filePath, 'utf-8')
-      const {_document: document} = new JSDOM(html).window
+      const { _document: document } = new JSDOM(html).window
       const failedRate = document.querySelector('.test-chart-metadata li:nth-child(3) span').innerHTML
       assert.equal(failedRate, '23.08%')
       done()
@@ -192,7 +224,7 @@ test.group('Report data tests', group => {
     await fire(emitter)
     emitter.on('report:end', () => {
       const html = fs.readFileSync(filePath, 'utf-8')
-      const {_document: document} = new JSDOM(html).window
+      const { _document: document } = new JSDOM(html).window
       const totalTime = document.querySelector('.test-chart-metadata li:nth-child(3) span').innerHTML
       assert.notEmpty(totalTime)
       done()
@@ -205,7 +237,7 @@ test.group('Report data tests', group => {
     await fire(emitter)
     emitter.on('report:end', () => {
       const html = fs.readFileSync(filePath, 'utf-8')
-      const {_document: document} = new JSDOM(html).window
+      const { _document: document } = new JSDOM(html).window
       const timestamp = document.querySelector('.test-chart-metadata li:nth-child(4) span').innerHTML
       assert.notEmpty(timestamp)
       done()
@@ -218,7 +250,7 @@ test.group('Report data tests', group => {
     await fire(emitter)
     emitter.on('report:end', () => {
       const html = fs.readFileSync(filePath, 'utf-8')
-      const {_document: document} = new JSDOM(html).window
+      const { _document: document } = new JSDOM(html).window
       const totalGroups = document.querySelector('.total-groups .total').innerHTML
       const totalGroupsFailed = document.querySelector('.total-groups .result.failed').innerHTML
       const totalGroupsPassed = document.querySelector('.total-groups .result.passed').innerHTML
@@ -237,7 +269,7 @@ test.group('Report data tests', group => {
     await fire(emitter)
     emitter.on('report:end', () => {
       const html = fs.readFileSync(filePath, 'utf-8')
-      const {_document: document} = new JSDOM(html).window
+      const { _document: document } = new JSDOM(html).window
       const totalTests = document.querySelector('.total-tests .total').innerHTML
       const totalTestsFailed = document.querySelector('.total-tests .result.failed').innerHTML
       const totalTestsPassed = document.querySelector('.total-tests .result.passed').innerHTML
@@ -257,7 +289,7 @@ test.group('Report data tests', group => {
     emitter.on('report:end', () => {
       const html = fs.readFileSync(filePath, 'utf-8')
       try {
-        const {_document: document} = new JSDOM(html, { runScripts: "dangerously", resources: "usable" }).window
+        const { _document: document } = new JSDOM(html, { runScripts: "dangerously", resources: "usable" }).window
         const totalTestsOnPage = Array.from(document.querySelectorAll('[data-test-item]')).length
         assert.equal(totalTestsOnPage, 13)
       } catch (error) { }
@@ -271,7 +303,7 @@ test.group('Report data tests', group => {
     await fire(emitter)
     emitter.on('report:end', () => {
       const html = fs.readFileSync(filePath, 'utf-8')
-      const {_document: document} = new JSDOM(html, { runScripts: "dangerously", resources: "usable" }).window
+      const { _document: document } = new JSDOM(html, { runScripts: "dangerously", resources: "usable" }).window
       const totalGroupsOnPage = Array.from(document.querySelectorAll('[data-key]')).length
       assert.equal(totalGroupsOnPage, 12)
       done()
