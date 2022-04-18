@@ -10,7 +10,7 @@ declare module '@japa/core' {
   }
 }
 
-export interface TestDrivenHtmlReporterConfig {
+export interface TableDrivenHtmlReporterConfig {
   projectName?: string
   directory?: string
   reportName?: string
@@ -69,7 +69,13 @@ async function minifyHtml(html: string): Promise<string> {
 
 }
 
-export function tableDrivenHtmlReporter({ projectName = '-/-', minify = false, directory = 'report', reportName = 'testsReport' }: TestDrivenHtmlReporterConfig = {}) {
+export function tableDrivenHtmlReporter({ 
+  projectName = '-/-', 
+  minify = false, 
+  directory = 'report', 
+  reportName = 'testsReport' 
+}: TableDrivenHtmlReporterConfig = {}) {
+  
   const testFile = getCallerFile()
   return (_: any, emitter: any) => {
     const indexes = {

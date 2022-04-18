@@ -3,7 +3,7 @@ import path from 'path'
 import { test } from '@japa/runner'
 import { Emitter, Runner } from '@japa/core'
 import { fire } from '@japa/synthetic-events'
-import { htmlReporter } from '../index'
+import { tableDrivenHtmlReporter } from '../index'
 import { JSDOM } from 'jsdom'
 
 const sleep = (time: number) => {
@@ -31,7 +31,7 @@ test.group('Report generation tests', group => {
 
   test('Generate Report in default directory', async ({ assert }, done: any) => {
     assert.plan(1)
-    htmlReporter()(runner, emitter)
+    tableDrivenHtmlReporter()(runner, emitter)
     await fire(emitter)
     emitter.on('report:end', () => {
       assert.isTrue(fs.existsSync(filePath))
@@ -42,7 +42,7 @@ test.group('Report generation tests', group => {
   test('Generate Report in another directory', async ({ assert }, done: any) => {
     assert.plan(1)
     const directory = "customReportDir"
-    htmlReporter({ directory })(runner, emitter)
+    tableDrivenHtmlReporter({ directory })(runner, emitter)
     await fire(emitter)
     emitter.on('report:end', () => {
       assert.isTrue(fs.existsSync(path.join(rootPath, directory, defaultReportFilename)))
@@ -56,7 +56,7 @@ test.group('Report generation tests', group => {
   test('Generate Report with another name', async ({ assert }, done: any) => {
     assert.plan(1)
     const reportName = "customReportName"
-    htmlReporter({ reportName })(runner, emitter)
+    tableDrivenHtmlReporter({ reportName })(runner, emitter)
     await fire(emitter)
     emitter.on('report:end', () => {
       assert.isTrue(fs.existsSync(path.join(dirPath, `${reportName}.html`)))
@@ -68,7 +68,7 @@ test.group('Report generation tests', group => {
     assert.plan(1)
     const reportName = "customReportName"
     const directory = "customReportDir"
-    htmlReporter({ reportName, directory })(runner, emitter)
+    tableDrivenHtmlReporter({ reportName, directory })(runner, emitter)
     await fire(emitter)
     emitter.on('report:end', () => {
       assert.isTrue(fs.existsSync(path.join(rootPath, directory, `${reportName}.html`)))
@@ -81,12 +81,12 @@ test.group('Report generation tests', group => {
 
   test('Generate a minified report with at least 10% size reduction', async ({ assert }, done: any) => {
     assert.plan(1)
-    htmlReporter()(runner, emitter)
+    tableDrivenHtmlReporter()(runner, emitter)
     emitter.on('report:end', async () => {
       const normalSize = (await fs.promises.stat(filePath)).size
       let newEmitter = new Emitter()
       let newRunner = new Runner(newEmitter)
-      htmlReporter({ minify: true, reportName: "minified" })(newRunner, newEmitter)
+      tableDrivenHtmlReporter({ minify: true, reportName: "minified" })(newRunner, newEmitter)
       newEmitter.on('report:end', async () => {
         const { size: minifiedSize } = await fs.promises.stat(path.join(dirPath, 'minified.html'))
         assert.isAbove(normalSize, minifiedSize * 1.1)
@@ -120,7 +120,7 @@ test.group('Template generation tests', group => {
 
   test('Generate the template on the report folder', async ({ assert }, done: any) => {
     assert.plan(1)
-    htmlReporter()(runner, emitter)
+    tableDrivenHtmlReporter()(runner, emitter)
     await fire(emitter)
     emitter.on('report:end', () => {
       assert.isTrue(fs.existsSync(path.join(dirPath, 'template.mustache')))
@@ -131,7 +131,7 @@ test.group('Template generation tests', group => {
   test('Generate the template on a custom report folder', async ({ assert }, done: any) => {
     assert.plan(1)
     const directory = 'customReportDir'
-    htmlReporter({ directory })(runner, emitter)
+    tableDrivenHtmlReporter({ directory })(runner, emitter)
     await fire(emitter)
     emitter.on('report:end', () => {
       assert.isTrue(fs.existsSync(path.join(rootPath, directory, 'template.mustache')))
@@ -146,7 +146,7 @@ test.group('Template generation tests', group => {
     await fs.promises.writeFile(path.join(dirPath, 'template.mustache'), `
         <!DOCTYPE html><html lang="en"><body><h1>Custom Template</h1></body></html>
     `)
-    htmlReporter()(runner, emitter)
+    tableDrivenHtmlReporter()(runner, emitter)
     await fire(emitter)
     emitter.on('report:end', () => {
       const report = fs.readFileSync(path.join(dirPath, defaultReportFilename), 'utf-8')
@@ -181,7 +181,7 @@ test.group('Report data tests', group => {
 
   test('Project name is provided', async ({ assert }, done: any) => {
     assert.plan(1)
-    htmlReporter({ projectName: "anotherReportName" })(runner, emitter)
+    tableDrivenHtmlReporter({ projectName: "anotherReportName" })(runner, emitter)
     await fire(emitter)
     emitter.on('report:end', () => {
       const html = fs.readFileSync(filePath, 'utf-8')
@@ -194,7 +194,7 @@ test.group('Report data tests', group => {
 
   test('Success Rate is provided', async ({ assert }, done: any) => {
     assert.plan(1)
-    htmlReporter()(runner, emitter)
+    tableDrivenHtmlReporter()(runner, emitter)
     await fire(emitter)
     emitter.on('report:end', () => {
       const html = fs.readFileSync(filePath, 'utf-8')
@@ -207,7 +207,7 @@ test.group('Report data tests', group => {
 
   test('Failed Rate is provided', async ({ assert }, done: any) => {
     assert.plan(1)
-    htmlReporter()(runner, emitter)
+    tableDrivenHtmlReporter()(runner, emitter)
     await fire(emitter)
     emitter.on('report:end', () => {
       const html = fs.readFileSync(filePath, 'utf-8')
@@ -220,7 +220,7 @@ test.group('Report data tests', group => {
 
   test('Total Time is not null or empty', async ({ assert }, done: any) => {
     assert.plan(1)
-    htmlReporter()(runner, emitter)
+    tableDrivenHtmlReporter()(runner, emitter)
     await fire(emitter)
     emitter.on('report:end', () => {
       const html = fs.readFileSync(filePath, 'utf-8')
@@ -233,7 +233,7 @@ test.group('Report data tests', group => {
 
   test('Timestamp is not null or empty', async ({ assert }, done: any) => {
     assert.plan(1)
-    htmlReporter()(runner, emitter)
+    tableDrivenHtmlReporter()(runner, emitter)
     await fire(emitter)
     emitter.on('report:end', () => {
       const html = fs.readFileSync(filePath, 'utf-8')
@@ -246,7 +246,7 @@ test.group('Report data tests', group => {
 
   test('Total groups data must be provided', async ({ assert }, done: any) => {
     assert.plan(4)
-    htmlReporter()(runner, emitter)
+    tableDrivenHtmlReporter()(runner, emitter)
     await fire(emitter)
     emitter.on('report:end', () => {
       const html = fs.readFileSync(filePath, 'utf-8')
@@ -265,7 +265,7 @@ test.group('Report data tests', group => {
 
   test('Total tests data must be provided', async ({ assert }, done: any) => {
     assert.plan(4)
-    htmlReporter()(runner, emitter)
+    tableDrivenHtmlReporter()(runner, emitter)
     await fire(emitter)
     emitter.on('report:end', () => {
       const html = fs.readFileSync(filePath, 'utf-8')
@@ -284,7 +284,7 @@ test.group('Report data tests', group => {
 
   test('Contains 13 tests on initial page', async ({ assert }, done: any) => {
     assert.plan(1)
-    htmlReporter()(runner, emitter)
+    tableDrivenHtmlReporter()(runner, emitter)
     await fire(emitter)
     emitter.on('report:end', () => {
       const html = fs.readFileSync(filePath, 'utf-8')
@@ -299,7 +299,7 @@ test.group('Report data tests', group => {
 
   test('Contains 12 groups', async ({ assert }, done: any) => {
     assert.plan(1)
-    htmlReporter()(runner, emitter)
+    tableDrivenHtmlReporter()(runner, emitter)
     await fire(emitter)
     emitter.on('report:end', () => {
       const html = fs.readFileSync(filePath, 'utf-8')
