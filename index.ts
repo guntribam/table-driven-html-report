@@ -69,7 +69,7 @@ async function minifyHtml(html: string): Promise<string> {
 
 }
 
-export function htmlReporter({ projectName = '-/-', minify = false, directory = 'report', reportName = 'testsReport' }: TestDrivenHtmlReporterConfig = {}) {
+export function tableDrivenHtmlReporter({ projectName = '-/-', minify = false, directory = 'report', reportName = 'testsReport' }: TestDrivenHtmlReporterConfig = {}) {
   const testFile = getCallerFile()
   return (_: any, emitter: any) => {
     const indexes = {
@@ -271,7 +271,6 @@ const mustacheTemplate = `
       color: white;
       outline-width: 0px;
       outline-color: black;
-      /* For Firefox */
     }
 
     .search-box:hover {
